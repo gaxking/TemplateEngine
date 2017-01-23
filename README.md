@@ -4,7 +4,7 @@
 一直想写一个轻量级的模样引擎，它能实现比如ajax回来json的时候，能够做一些模版替换工作，主要是字符串，对象，数组的替换，还有判断和循环
 无意间看到这篇文章 http://web.jobbole.com/56689  这篇文章简述了做一个模版引擎的基本思路。  
 
-` ``javascript  
+```java  
 var template =  
 'My skills:' +  
 '<%if(this.showSkills) {%>' +  
@@ -18,7 +18,7 @@ console.log(TemplateEngine(template, {
     skills: ["js", "html", "css"],  
     showSkills: true  
 }));  
-` ``
+```
 
 即可达到强大的模版效果
 相信很多人都觉得这堆模版有点难看
