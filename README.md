@@ -51,7 +51,9 @@ console.log(TemplateEngine(template, {
 }));
 ```
 针对第2点，我在外层加了一个闭包保存了左右标记  
+```javascript
 var TemplateEngine = new TemplateEngine("<%","%>");
+```  
 
-针对第3点，要支持循环，判断等语法，而且是轻量级的模版引擎，只能这样了，写过后端view模版的人应该不会反感。
+针对第3点，要支持循环，判断等语法，而且是轻量级的模版引擎，只能这样了，写过后端view模版的人应该不会反感。  
 针对第4点，还没完善以后再探索一下
