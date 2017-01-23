@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+<body>
+	
+</body>
+<script id="tpl" type="text/mytpl">
+<div>My skills:<% if(showSkills) {%><%for(var index in skills) {%><a href="#"><%skills[index]%></a><%}%><%} else {%><p><%d.z[1]%></p><%}%></div>
+</script>
+
+<script src="TemplateEngine.js"></script>
+
+<script>
+var tpl = TemplateEngine(document.getElementById("tpl").innerHTML, {
+   skills: ["js", "html", "css"],
+   d:{z:["1","c",2]},
+   showSkills: true
+});
+console.log(tpl);
+</script>
+</html>
