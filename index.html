@@ -14,6 +14,8 @@
 <script src="TemplateEngine.js"></script>
 
 <script>
+var TemplateEngine = new TemplateEngine("<%","%>");
+
 var tpl = TemplateEngine(document.getElementById("tpl").innerHTML, {
    skills: ["js", "html", "css"],
    d:{z:["1","c",2]},
