@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+<body>
+<ul id="example-1">
+  <li v-if="Math.random() > 0.5" v-for="item in ss[name]">
+  Sorry
+  </li>
+<div v-else >
+  Not sorry
+</div>
+
+</ul>
+</body>
+<script src="vue.js"></script>
+<script>
+var example1 = new Vue({
+  el: '#example-1',
+  data: {
+	ss: {
+		items: [
+		  {message: 'Foo', show:0.5},
+		  {message: 'Bar' }
+		]
+    },
+	name:"items"
+  }
+})
+</script>
+</html>

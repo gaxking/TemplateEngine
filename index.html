@@ -7,19 +7,28 @@
 <body>
 	
 </body>
+
 <script id="tpl" type="text/mytpl">
-<div>My skills:<% if(showSkills) {%><%for(var index in skills) {%><a href="#"><%skills[index]%></a><%}%><%} else {%><p><%d.z[1]%></p><%}%></div>
+<div v-bind:class="{ active: showSkills }"></div>
 </script>
 
 <script src="TemplateEngine.js"></script>
 
 <script>
-var TemplateEngine = new TemplateEngine("<%","%>");
+var TemplateEngine = new TemplateEngine("{{","}}");
 
 var tpl = TemplateEngine(document.getElementById("tpl").innerHTML, {
+	bookshop:[
+	{name:"shop1",key:"span",books:[{name:"js权威指南", key:"1", div:"span",span:[{num:1},{num:2}]}, {name:"css权威指南", div:"span",span:[{num:1},{num:2}]}]},
+		{name:"shop2",key:"span",books:[{name:"语文书", div:"span",span:[{num:1},{num:2}]}, {name:"动物书", div:"span",span:[{num:1},{num:2}]}]},
+	],
+   name: "books",
    skills: ["js", "html", "css"],
-   d:{z:["1","c",2]},
-   showSkills: true
+   d:{z:[{a:"1"},{a:"c"},{a:2}]},
+   showSkills: true,
+   key:"span",
+   kk:1,
+   type:"B"
 });
 console.log(tpl);
 </script>
