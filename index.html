@@ -10,10 +10,13 @@
 
 <script id="tpl" type="text/mytpl">
 <ul v-if="bookshop">
-	<li v-for="(shop, index) in bookshop">
-		<p>{{index}} : {{shop.name}}</p>
-		<dd v-for="(category, index) in shop.categories">
-			{{index}} - {{category.name}}
+	<li v-for="(shop, index1) in bookshop">
+		<p>{{index1}}:{{shop.name}}</p>
+		<dd v-for="(category, index2) in shop.categories">
+			{{index1}}:{{shop.name}} - {{index2}}:{{category.name}}
+			<dl v-for="(book, index3) in category.books">
+				{{index1}}:{{shop.name}} - {{index2}}:{{category.name}} - {{index3}}:{{book.name}}
+			</dl>
 		</dd>
 	</li>
 </ul>

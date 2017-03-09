@@ -89,6 +89,8 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 
 					for(var i = 0, index = 1, l = target.length; i<l; i++) {
 						pathMap[item.name] = items + "["+i+"]";
+						pathMap[item.index+":index"] = i;
+
 						var sampleArr = []
 
 						vExpIf.lastIndex = 0;
@@ -144,7 +146,7 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 										vExpList.lastIndex = lastIndex;
 									}
 
-									sample.str.slice(cursor);
+									eleReal += sample.str.slice(cursor);
 								}else{
 									eleReal += getRealTpl(sample.str);
 								}
@@ -271,16 +273,19 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 				return tpl.replace(re, function(){
 					var match = arguments[1].split(vExpListVal);
 
-					if(pathMap[match[0]]){
+					if(pathMap[match[0]]!==undefined){
 						match[0] = pathMap[match[0]];
-						return leftFlag + match.join(".") + rightFlag;
+						//return leftFlag + match.join(".") + rightFlag;
+						return getDepTarget(match.join("."));
 					}else if(match[0]==item.name){
 						match[0] = items;
-						return leftFlag + match.shift() + '['+i+'].' + match.join(".") + rightFlag;
-					}else if(match[0] == item.index){
-						return i;
+						//return leftFlag + match.shift() + '['+i+'].' + match.join(".") + rightFlag;
+						return getDepTarget(match.shift() + '['+i+'].' + match.join("."));
+					}else if(pathMap[match[0]+":index"]!==undefined){
+						return pathMap[match[0]+":index"];
 					}else{
-						return leftFlag + match.join(".") + rightFlag;
+						//return leftFlag + match.join(".") + rightFlag;
+						return match.join(".");
 					}
 				});
 			}
