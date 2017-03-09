@@ -3,29 +3,52 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 	var re = new RegExp(leftFlag + "\\s*(.+?)\\s*" + rightFlag, "g"),
 		vExpIf = /<([a-z]+)[^((\1|\/)>)]*\s(v-if|v-else-if)=(["'])(.*?)\3.*?(\1|\/)>(<([a-z]+)[^((\7|\/)>)]*\s(v-else-if|v-else).*?(\7|\/)>)?/g,
 		vExpElse = /<([a-z]+)[^((\1|\/)>)]*\s(v-else).*?(\1|\/)>/g,
-	   	vExpList = /<([a-z]+).*\s(v-for)=(["'])(.+?)\3.*(\1|\/)>(<([a-z]+)[^((\7|\/)>)]*\s(v-else).*?(\7|\/)>)?/g,
+	   	vExpList = /<([a-z]+)[^((\1|\/)>)]*\s(v-for)=(["'])(.+?)\3.*(\1|\/)>(<([a-z]+)[^((\7|\/)>)]*\s(v-else).*?(\7|\/)>)?/g,
 		vExpListTag = /\s*((\w+)|\(\s*(\w+)\s*,\s*(\w+)\s*\))\s+in\s+(.+)/,
 		vExpListVal = /\.|\[["']|\[(?=\d)|['"]?\]\[["']?|['"]?\]\.|['"]?\]/,
 		vExpHasVariable = /\[([^\d]+)\]/g;
 		vExpCheckIsPath = /[^\.\w\s\[\]]/g;
+		vExpBindClass = /<([a-z]+)[^((\1|\/)>)]*?\s(v-bind)\s*:\s*(class)\s*=(["'])(.*?)\4.*?(\1|\/)>/g;
+		vExpBindStyle = /<([a-z]+)[^((\1|\/)>)]*?\s(v-bind)\s*:\s*(style)\s*=(["'])(.*?)\4.*?(\1|\/)>/g;
+		vExpGetClass = /\sclass\s*=\s*(["'])\s*(.*?)\s*\1/i;
+		vExpGetStyles = /\sstyle\s*=\s*(["'])\s*(.*?)\s*\1/i;
 
 	return function(html, options) {
 		html = html.replace(/[\r\t\n]/g, '');
 
-		var cursor = 0, match, code = obj2str(options);
+		var cursor = 0, match, lastIndex, realListTpl,code = obj2str(options);
 		code += ';\n';
 
-		while(match = vExpList.exec(html) || vExpIf.exec(html)) {
-			var lastIndex = vExpList.lastIndex,
-			    realListTpl = vueTpl(match);
+		while(match = vExpList.exec(html)) {
+			lastIndex = vExpList.lastIndex,
+			realListTpl = vueTpl(match);
 		
-			if(match[2]==='v-for'){
-				html = html.slice(cursor, match.index) + realListTpl + html.slice(match.index + match[0].length);
-				vExpList.lastIndex = lastIndex - match[0].length + realListTpl.length;
-			}else{
-				html = html.slice(cursor, match.index) + realListTpl + html.slice(html.indexOf(match[0]) + match[0].length);
-				vExpIf.lastIndex = lastIndex - match[0].length + realListTpl.length;
-			}
+			html = html.slice(cursor, match.index) + realListTpl + html.slice(match.index + match[0].length);
+			vExpList.lastIndex = lastIndex - match[0].length + realListTpl.length;
+		}
+
+		while(match = vExpIf.exec(html)) {
+			lastIndex = vExpIf.lastIndex,
+			realListTpl = vueTpl(match);
+		
+			html = html.slice(cursor, match.index) + realListTpl + html.slice(html.indexOf(match[0]) + match[0].length);
+			vExpIf.lastIndex = lastIndex - match[0].length + realListTpl.length;
+		}
+
+		while(match = vExpBindClass.exec(html)) {
+			lastIndex = vExpBindClass.lastIndex,
+			realListTpl = vueTpl(match);
+			
+			html = html.slice(cursor, match.index) + realListTpl + html.slice(match.index + match[0].length);
+			vExpBindClass.lastIndex = lastIndex - match[0].length + realListTpl.length;
+		}
+
+		while(match = vExpBindStyle.exec(html)) {
+			lastIndex = vExpBindStyle.lastIndex,
+			realListTpl = vueTpl(match);
+			
+			html = html.slice(cursor, match.index) + realListTpl + html.slice(match.index + match[0].length);
+			vExpBindStyle.lastIndex = lastIndex - match[0].length + realListTpl.length;
 		}
 
 		while(match = re.exec(html)) {
@@ -42,9 +65,10 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 				var isElseIf = matchInfo[8].toLowerCase() === 'v-else-if'?true:false;
 			}
 
-			var val,pathMap = pathMap || {},
-				eleRealTpl = ele.replace(new RegExp("\\s"+ tag +"(=([\"'])(.*?)\\2)?"), function(v){
-					val = arguments[3];
+			var val,pathMap = pathMap || {}, indexForBind,
+				eleRealTpl = ele.replace(new RegExp("\\s"+ tag +"(\s*:\s*([a-zA-Z]+)\s*)?(=([\"'])(.*?)\\4)?"), function(v){
+					val = arguments[5];
+					indexForBind = ele.indexOf(arguments[0]);
 					return "";
 				}),
 				eleReal = '';
@@ -65,45 +89,66 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 
 					for(var i = 0, index = 1, l = target.length; i<l; i++) {
 						pathMap[item.name] = items + "["+i+"]";
+						var sampleArr = []
 
 						vExpIf.lastIndex = 0;
 						var matchif, matchList, eleRealIf = '', eleRealTplTmp = eleRealTpl, cursor = 0;
-						while(matchif = vExpIf.exec(eleRealTpl)) {
+
+						var IfBeginStrIndex = eleRealTpl.search(vExpIf);
+						if(IfBeginStrIndex>-1){
 							var isIf = false;
-							if(matchif.input.slice(0, matchif.index).match(">")===null){
+							if(eleRealTpl.slice(0, IfBeginStrIndex).match(">")===null){
 								isIf = true;
 							}else{
+								vExpList.lastIndex = 0;
 								var matchCheckList = vExpList.exec(eleRealTplTmp);
-								if(!matchCheckList || matchif.index < matchCheckList.index || matchCheckList.index+matchCheckList[0].length < matchif.index){
+								if(!matchCheckList || IfBeginStrIndex < matchCheckList.index || matchCheckList.index+matchCheckList[0].length < matchif.index){
 									isIf = true;
 								}
 							}
 
 							if(isIf){
-								var realListTplIf = vueTpl(matchif, pathMap),
-									matchElse = vExpElse.exec(eleRealTpl);
+								while(matchif = vExpIf.exec(eleRealTpl)) {
+									hasIf = true;
+									var realListTplIf = vueTpl(matchif, pathMap),
+										matchElse = vExpElse.exec(eleRealTpl);
 
+									if(matchif.index>cursor){
+										sampleArr.push({str:eleRealTpl.slice(cursor, matchif.index)});
+									}
+									sampleArr.push({str:realListTplIf,flag:"if"});
 
-								eleRealIf += getRealTpl(eleRealTplTmp.slice(cursor, matchif.index));
-								eleRealIf += realListTplIf;
-								cursor = matchif.index + matchif[0].length;
-								cursor += matchElse?matchElse[0].length:0;
+									cursor = matchif.index + matchif[0].length;
+									cursor += matchElse?matchElse[0].length:0;
+								}
 							}
 						}
-						eleRealIf += getRealTpl(eleRealTplTmp.slice(cursor));
-						eleRealTplTmp = eleRealIf;
-	
-						vExpList.lastIndex = 0, cursor = 0;
-						while(matchList = vExpList.exec(eleRealTplTmp)) {
-							var realListTpl = vueTpl(matchList, pathMap);
-							eleReal += getRealTpl(eleRealTplTmp.slice(cursor, matchList.index));
-							eleReal += realListTpl;
-							cursor = matchList.index + matchList[0].length;
-						}
-						if(matchList){
-							eleReal += getRealTpl(eleRealTplTmp.slice(cursor));
-						}else if(!matchList){
-							eleReal += getRealTpl(eleRealTplTmp);
+
+						sampleArr.push({str:eleRealTpl.slice(cursor)});
+						for(var s = 0; s < sampleArr.length; s++) {
+							var sample = sampleArr[s];
+							if(sample.flag == "if"){
+								eleReal += sample.str;
+							}else if(!sample.flag){
+								var ListBeginStrIndex = sample.str.search(vExpList);
+								if(ListBeginStrIndex>-1){
+									cursor = 0;
+									vExpList.lastIndex = 0;
+									while(matchList = vExpList.exec(sample.str)) {
+										var lastIndex = vExpList.lastIndex;
+										var realListTpl = vueTpl(matchList, pathMap);
+
+										eleReal += getRealTpl(sample.str.slice(cursor, matchList.index));
+										eleReal += realListTpl;
+										cursor = matchList.index + matchList[0].length;
+										vExpList.lastIndex = lastIndex;
+									}
+
+									sample.str.slice(cursor);
+								}else{
+									eleReal += getRealTpl(sample.str);
+								}
+							}
 						}
 					}
 					break;
@@ -114,10 +159,77 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 					eleReal = getIf();
 					break;
 				case 'v-else':
-					eleReal = eleRealTpl;
+					eleReal = getRealTpl(eleRealTpl);
+					break;
+				case 'v-bind':
+					var key = match[3].toLowerCase() ,styleStr = ' style="',classStr = ' class="';
+					if(val.match(/\{[^\}]+\}/)){
+						val = creatFun(val);
+					}else{
+						val = getDepTarget(val)
+					}
+					
+					if(key==='class'){
+						var classNames = getClass(eleRealTpl);
+
+						if(classNames) {
+							eleRealTpl = eleRealTpl.replace(vExpGetClass, function(){
+								indexForBind -= arguments[0].length;
+								return '';
+							});
+							classStr += classNames+" ";
+						}
+
+						for(var x in val){
+							if(val[x])classStr += x+" ";
+						}
+						classStr = classStr.slice(0, classStr.length-1) + '"';
+
+						eleRealTpl = eleRealTpl.slice(0, indexForBind) + classStr + eleRealTpl.slice(indexForBind);
+					}else if(key==='style'){
+						var styleNames = getStyle(eleRealTpl);
+
+						if(styleNames) {
+							eleRealTpl = eleRealTpl.replace(vExpGetStyles, function(){
+								indexForBind -= arguments[0].length;
+								return '';
+							});
+							styleStr += styleNames;
+						}
+
+						for(var x in val){
+							if(val[x])styleStr += x + ":" + val[x] + ";";
+						}
+						styleStr = styleStr.slice(0, styleStr.length-1) + '"';
+
+						eleRealTpl = eleRealTpl.slice(0, indexForBind) + styleStr + eleRealTpl.slice(indexForBind);
+					}
+
+
+					eleReal = getRealTpl(eleRealTpl);
 					break;
 			}
 
+			function getClass(str){
+				var result = str.match(vExpGetClass);
+				return result?result[2]:null;
+			}
+
+			function getStyle(str){
+				var result = str.match(vExpGetStyles);
+				return result?result[2]:null;
+			}
+
+			function creatFun(val){
+				try
+				{
+					val = new Function((code+"return "+val).replace(/[\r\t\n]/g, ''))();
+				}catch(err){
+					val = undefined;
+				}
+		
+				return val;
+			}
 
 			function getIf(){
 				if(val==='true'){
@@ -128,12 +240,7 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 					val = +val;
 				}else{
 					if(val.match(vExpCheckIsPath)) {
-						try
-						{
-							val = new Function((code+"return "+val).replace(/[\r\t\n]/g, ''))();
-						}catch(err){
-							val = undefined;
-						}
+						val = creatFun(val);
 					}else{
 						val = getDepTarget(getRealPath(val));
 					}
@@ -166,12 +273,14 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 
 					if(pathMap[match[0]]){
 						match[0] = pathMap[match[0]];
-						return leftFlag + match.shift() + '.' + match.join(".") + rightFlag;
+						return leftFlag + match.join(".") + rightFlag;
 					}else if(match[0]==item.name){
 						match[0] = items;
 						return leftFlag + match.shift() + '['+i+'].' + match.join(".") + rightFlag;
+					}else if(match[0] == item.index){
+						return i;
 					}else{
-						return leftFlag + match.shift() + rightFlag;
+						return leftFlag + match.join(".") + rightFlag;
 					}
 				});
 			}
@@ -247,4 +356,3 @@ var TemplateEngine = function(leftFlag, rightFlag) {
 	}
 }
 
-//<div>My skills:<% if(showSkills) {%><%for(var index in skills) {%><a href="#"><%skills[index]%></a><%}%><%} else {%><p><%d.z[1]%></p><%}%></div>
