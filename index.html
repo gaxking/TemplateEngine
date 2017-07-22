@@ -7,112 +7,23 @@
 <body>
 	
 </body>
-
 <script id="tpl" type="text/mytpl">
-<ul v-if="bookshop">
-	<li v-for="(shop, index1) in bookshop">
-		<p>{{index1}}:{{shop.name}}</p>
-		<dd v-for="(category, index2) in shop.categories">
-			{{index1}}:{{shop.name}} - {{index2}}:{{category.name}}
-			<dl v-for="(book, index3) in category.books">
-				{{index1}}:{{shop.name}} - {{index2}}:{{category.name}} - {{index3}}:{{book.name}}
-			</dl>
-		</dd>
-	</li>
-</ul>
-<p v-else>no data</p>
+<div>My skills:<% if(showSkills) {%><%for(var index in skills) {%><a href="#"><%skills[index]%></a> <%}%><%} else {%><p><%d.z[1]%></p><%}%></div>
 </script>
 
 <script src="TemplateEngine.js"></script>
-<script>
-<<<<<<< HEAD
-<<<<<<< HEAD
-var TemplateEngine = new TemplateEngine("{{","}}");
 
-=======
->>>>>>> parent of b3ce63b... 改进的模版引擎
-=======
->>>>>>> parent of b3ce63b... 改进的模版引擎
+<script>
+var TemplateEngine = new TemplateEngine("<%","%>");
+
 var tpl = TemplateEngine(document.getElementById("tpl").innerHTML, {
-	bookshop:[
-		{
-			name:"新华书店", 
-			categories:[
-				{
-					name:"九年义务教育",
-					books:[
-						{
-							name:"语文书",
-							pages:800
-						},
-						{
-							name:"数学书",
-							pages:300,
-							author:"教育局"
-						},
-						{
-							name:"英语书",
-							pages:300,
-							wordCount:"10万"
-						}
-					]
-				},
-				{
-					name:"高中",
-					books:[
-						{
-							name:"五年高考",
-							pages:500
-						},
-						{
-							name:"三年模拟",
-							pages:300
-						}
-					]
-				}
-			]
-		},
-		{
-			name:"诚品书店", 
-			categories:[
-				{
-					name:"web编程",
-					books:[
-						{
-							name:"html入门到精通",
-							pages:800
-						},
-						{
-							name:"javascript权威指南",
-							pages:300,
-							author:"淘宝前端团队"
-						},
-						{
-							name:"css禅意花园",
-							pages:300,
-						}
-					]
-				},
-				{
-					name:"中国历史",
-					books:[
-						{
-							name:"近代史",
-							pages:500
-						},
-						{
-							name:"石器时代",
-							pages:300
-						}
-					]
-				}
-			]
-		}
-	]
+   skills: ["js", "html", "css"],
+   d:{z:["1","c",2]},
+   showSkills: true
 });
+console.log(tpl);
 
 document.body.innerHTML = tpl;
-console.log(tpl);
 
 </script>
 </html>
